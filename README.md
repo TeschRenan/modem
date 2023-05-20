@@ -1,2 +1,2 @@
 # modem
- Library from use Modem using ATs comand in ESP IDF.
+ Library to use Modem using ATs comand in ESP IDF.
