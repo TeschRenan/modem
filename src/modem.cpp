@@ -59,7 +59,8 @@ void modem::init(gpio_num_t tx,gpio_num_t rx, uart_port_t uart_num, int baud_rat
         .data_bits = UART_DATA_8_BITS,
         .parity    = UART_PARITY_DISABLE,
         .stop_bits = UART_STOP_BITS_1,
-        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE
+        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
+		.source_clk = UART_SCLK_DEFAULT
     };
     
 	uart_param_config(uart_num, &uart_config);
@@ -119,14 +120,14 @@ uint8_t modem::atCmdWaitResponse(char * cmd, char *resp, char * resp1, int cmdSi
 		infoCommand(cmd, cmdSize, "AT COMMAND:");
 		
 		uart_write_bytes(uart_num, (const char*)cmd, cmdSize);
-		uart_wait_tx_done(uart_num, 100 / portTICK_RATE_MS);
+		uart_wait_tx_done(uart_num, 100 / portTICK_PERIOD_MS);
 	}
 
 	if (response != NULL) 
 	{
 		// Read Modem response into buffer
 		char *pbuf = *response;
-		len = uart_read_bytes(uart_num, (uint8_t*)data, 256, timeout / portTICK_RATE_MS);
+		len = uart_read_bytes(uart_num, (uint8_t*)data, 256, timeout / portTICK_PERIOD_MS);
 		while (len > 0) {
 			if ((tot+len) >= size) {
 				char *ptemp = (char*)realloc(pbuf, size+512);
@@ -137,7 +138,7 @@ uint8_t modem::atCmdWaitResponse(char * cmd, char *resp, char * resp1, int cmdSi
 			memcpy(pbuf+tot, data, len);
 			tot += len;
 			response[tot] = 0;
-			len = uart_read_bytes(uart_num, (uint8_t*)data, 256, 100 / portTICK_RATE_MS);
+			len = uart_read_bytes(uart_num, (uint8_t*)data, 256, 100 / portTICK_PERIOD_MS);
 		}
 		*response = pbuf;
 		return tot;
@@ -148,7 +149,7 @@ uint8_t modem::atCmdWaitResponse(char * cmd, char *resp, char * resp1, int cmdSi
 	{
 		memset(data, 0, 256);
 		len = 0;
-		len = uart_read_bytes(uart_num, (uint8_t*)data, 256, 10 / portTICK_RATE_MS);
+		len = uart_read_bytes(uart_num, (uint8_t*)data, 256, 10 / portTICK_PERIOD_MS);
 		if (len > 0) 
 		{
 			for (int i=0; i<len;i++) {
@@ -230,7 +231,7 @@ uint8_t modem::verifyResponse(char* resp, int timeout){
 	{
 		memset(data, 0, 256);
 		len = 0;
-		len = uart_read_bytes(uart_num, (uint8_t*)data, 256, 10 / portTICK_RATE_MS);
+		len = uart_read_bytes(uart_num, (uint8_t*)data, 256, 10 / portTICK_PERIOD_MS);
 		if (len > 0) 
 		{
 			for (int i=0; i<len;i++) {
@@ -308,7 +309,7 @@ uint8_t modem::getResponse(char *resp,char *key, int lenght,  int timeout){
 	{
 		memset(data, 0, 256);
 		len = 0;
-		len = uart_read_bytes(uart_num, (uint8_t*)data, 256, 10 / portTICK_RATE_MS);
+		len = uart_read_bytes(uart_num, (uint8_t*)data, 256, 10 / portTICK_PERIOD_MS);
 		if (len > 0) 
 		{
 			for (int i=0; i<len;i++) {
@@ -387,7 +388,7 @@ int32_t modem::write(char* value)
 	infoCommand(value, len, "WRITE STRING:");
 
     int size = uart_write_bytes(uart_num, (const char*)value, len);
-	uart_wait_tx_done(uart_num, 100 / portTICK_RATE_MS);
+	uart_wait_tx_done(uart_num, 100 / portTICK_PERIOD_MS);
 
     return size;
 }
