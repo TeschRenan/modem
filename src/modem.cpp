@@ -213,7 +213,7 @@ uint8_t modem::atCmdWaitResponse(char * cmd, char *resp, char * resp1, int cmdSi
 }
 
 /**
- * @brief Checks response if it matches expected.
+ * @brief Checks response has the string in the UART.
  *
  * @param [resp]: String to validate.
  * @param [timeout]: Maximum time to wait for response
@@ -221,11 +221,11 @@ uint8_t modem::atCmdWaitResponse(char * cmd, char *resp, char * resp1, int cmdSi
  * @return [0]: Timeout out or diverging return.
  * @return [1]: Success resp.
 **/ 
-uint8_t modem::verifyResponse(char* resp, int timeout){
+uint8_t modem::contains(char* resp, int timeout){
 
-	char sresp[256] = {'\0'};
+
 	char data[256] = {'\0'};
-    int len, res = 1, idx = 0, tot = 0, timeoutCnt = 0;
+    int len, res = 1, timeoutCnt = 0;
 	
 	while(1)
 	{
@@ -234,39 +234,14 @@ uint8_t modem::verifyResponse(char* resp, int timeout){
 		len = uart_read_bytes(uart_num, (uint8_t*)data, 256, 10 / portTICK_PERIOD_MS);
 		if (len > 0) 
 		{
-			for (int i=0; i<len;i++) {
-				if (idx < 256) {
-					if ((data[i] >= 0x20) && (data[i] < 0x80)) 
-						sresp[idx++] = data[i];
-					else 
-						sresp[idx++] = 0x2e;
-				}
-			}
-			tot += len;
-		}
-		else 
-		{
-			if (tot > 0) {
-				// Check the response
-				if (strstr(sresp, resp) != NULL) 
-				{
-					
-					ESP_LOGI(TAG,"AT RESPONSE: [%s]", sresp);
-					
+			if (strstr(data, resp) != NULL) 
+			{
+				
+				ESP_LOGI(TAG,"OK Contains [%s]", resp);
 
-					res = 1;
-					
-					break;
-				}
-				else 
-				{
-					// no match
-					
-					ESP_LOGI(TAG,"AT BAD RESPONSE: ---> [%s]", sresp);
-					
-					res = 0;
-					break;
-				}
+				res = 1;
+				
+				break;
 			}
 		}
 
@@ -312,6 +287,7 @@ uint8_t modem::getResponse(char *resp,char *key, int lenght,  int timeout){
 		len = uart_read_bytes(uart_num, (uint8_t*)data, 256, 10 / portTICK_PERIOD_MS);
 		if (len > 0) 
 		{
+			
 			for (int i=0; i<len;i++) {
 				if (idx < 256) {
 					if ((data[i] >= 0x20) && (data[i] < 0x80)) 
